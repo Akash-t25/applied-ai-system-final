@@ -11,23 +11,82 @@ Your goal is to:
 - Evaluate what your system gets right and wrong
 - Reflect on how this mirrors real world AI recommenders
 
-Replace this paragraph with your own summary of what your version does.
+This simulation builds a small music recommender that matches songs to a user based on their taste profile. It scores each song using weighted rules — rewarding genre and mood matches, and using proximity math to reward songs whose energy level is closest to what the user prefers. The top-scoring songs are returned as recommendations.
 
 ---
 
 ## How The System Works
 
-Explain your design in plain language.
+Real-world recommenders like Spotify or YouTube learn from massive amounts of listening history — they detect patterns across millions of users and use machine learning to figure out what weights and features matter most. Our version skips the learning step and instead hard-codes those decisions manually, which makes the logic transparent and easy to reason about.
 
-Some prompts to answer:
+This system will prioritize **genre and mood matching** above all else, since those define the identity of a song. Energy proximity is used as a secondary signal — we reward songs that are *close* to the user's preferred energy level, not just songs that are high or low energy.
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+### Song Features
 
-You can include a simple diagram or bullet list if helpful.
+Each `Song` object stores the following fields:
+
+| Feature | Type | Description |
+|---|---|---|
+| `id` | int | Unique identifier |
+| `title` | str | Song title |
+| `artist` | str | Artist name |
+| `genre` | str | Music genre (e.g. pop, rock, jazz) |
+| `mood` | str | Emotional mood (e.g. happy, calm, melancholic) |
+| `energy` | float | Energy level from 0.0 (low) to 1.0 (high) |
+| `tempo_bpm` | float | Beats per minute |
+| `valence` | float | Musical positivity, 0.0 to 1.0 |
+| `danceability` | float | How suitable for dancing, 0.0 to 1.0 |
+| `acousticness` | float | How acoustic (vs. electronic), 0.0 to 1.0 |
+
+### UserProfile Features
+
+Each `UserProfile` stores:
+
+| Feature | Type | Description |
+|---|---|---|
+| `favorite_genre` | str | The genre the user prefers most |
+| `favorite_mood` | str | The mood the user is looking for |
+| `target_energy` | float | Ideal energy level, 0.0 to 1.0 |
+| `likes_acoustic` | bool | Whether the user prefers acoustic over electronic |
+
+### Algorithm Recipe
+
+#### Scoring Rule (one song at a time)
+
+Each song is judged against the user profile and earns points based on how well it matches:
+
+| Rule | Points | How it works |
+|---|---|---|
+| Genre match | **+2.0** | Exact string match — `song["genre"] == user["genre"]` |
+| Mood match | **+1.0** | Exact string match — `song["mood"] == user["mood"]` |
+| Energy proximity | **+0.0 to +1.0** | `1.0 - abs(song_energy - target_energy)` — closer = more points |
+| Acousticness alignment | **+0.5** | Song's acousticness >= 0.5 must agree with `likes_acoustic` |
+
+**Maximum possible score: 4.5**
+
+Genre is worth the most (+2.0) because it is the hardest constraint — a hip-hop fan and a classical fan have almost no overlap. Mood is worth less (+1.0) because it is more flexible — the same user might enjoy both "happy" and "energetic" songs in the same genre. Energy uses proximity math instead of a binary match so that a song at 0.83 is not penalized the same as a song at 0.20 when the target is 0.85.
+
+#### Ranking Rule (list of songs)
+
+Every song in the catalog is scored using the Scoring Rule. The results are sorted from highest to lowest score. The top `k` songs (default: 5) are returned as recommendations. No song is skipped before scoring — all 20 are evaluated so the ranking is a fair comparison.
+
+#### User Profile Used
+
+```python
+user_prefs = {
+    "genre": "hip-hop",
+    "mood": "energetic",
+    "energy": 0.85,       # 0.0 = calm, 1.0 = intense
+    "likes_acoustic": False
+}
+```
+
+### Potential Biases and Limitations
+
+- **Genre over-prioritization** — genre is worth +2.0, twice the mood weight. A song that perfectly matches mood, energy, and acousticness but has the wrong genre will still score lower than a genre-match with nothing else in common. Great songs can get buried this way.
+- **Binary genre/mood matching** — there is no partial credit. A hip-hop fan gets zero genre points for an r&b song, even though the two genres are closely related. The system treats all mismatches as equally wrong.
+- **Rare moods get wasted weight** — "energetic" only appears in 2 of 20 songs. If the user's mood is uncommon in the catalog, the +1.0 mood weight rarely fires and the ranking falls back almost entirely on genre and energy.
+- **`likes_acoustic` penalizes broadly** — setting `likes_acoustic: False` silently down-ranks jazz, classical, lofi, and country songs without the user explicitly saying they dislike those genres. A user might want chill jazz even if they prefer electronic production overall.
 
 ---
 
@@ -67,6 +126,8 @@ You can add more tests in `tests/test_recommender.py`.
 ---
 
 ## Experiments You Tried
+
+![Scoring Modes Comparison](assets/screenshot.png)
 
 Use this section to document the experiments you ran. For example:
 
