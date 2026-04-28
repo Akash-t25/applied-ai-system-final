@@ -1,0 +1,106 @@
+{
+  "lofi": {
+    "description": "Lo-fi hip hop is defined by slow, mellow beats with intentional audio imperfections — vinyl crackle, tape hiss, background ambience. It is designed for studying, relaxing, or background listening. Tempo is typically 60-90 BPM.",
+    "energy_range": [0.20, 0.50],
+    "typical_moods": ["chill", "focused", "sad"],
+    "typical_detailed_moods": ["nostalgic", "calm", "melancholic"],
+    "acoustic_level": "high",
+    "related_genres": ["ambient", "jazz"]
+  },
+  "ambient": {
+    "description": "Ambient music prioritizes atmosphere over rhythm or melody. It creates immersive soundscapes using synthesizers, drones, and field recordings. Very low energy, designed to blend into the background.",
+    "energy_range": [0.10, 0.40],
+    "typical_moods": ["chill", "relaxed", "sad", "moody"],
+    "typical_detailed_moods": ["dreamy", "melancholic", "calm"],
+    "acoustic_level": "very high",
+    "related_genres": ["lofi", "classical"]
+  },
+  "jazz": {
+    "description": "Jazz is characterized by improvisation, swing rhythms, and complex chord progressions. It ranges from upbeat bebop to slow ballads. Acoustic instruments — piano, bass, trumpet — dominate.",
+    "energy_range": [0.25, 0.65],
+    "typical_moods": ["relaxed", "romantic", "moody", "chill"],
+    "typical_detailed_moods": ["nostalgic", "romantic", "dreamy", "melancholic"],
+    "acoustic_level": "very high",
+    "related_genres": ["classical", "r&b"]
+  },
+  "classical": {
+    "description": "Classical music spans centuries of orchestral, chamber, and solo instrumental composition. Ranges from gentle piano pieces to powerful symphonies. Almost entirely acoustic.",
+    "energy_range": [0.15, 0.80],
+    "typical_moods": ["relaxed", "sad", "intense", "romantic"],
+    "typical_detailed_moods": ["melancholic", "romantic", "calm", "dreamy"],
+    "acoustic_level": "very high",
+    "related_genres": ["ambient", "jazz"]
+  },
+  "pop": {
+    "description": "Pop music is built for wide appeal — catchy hooks, polished production, and verse-chorus structure. High energy and danceability. Dominated by synthesizers and digital production.",
+    "energy_range": [0.55, 0.92],
+    "typical_moods": ["happy", "energetic", "romantic"],
+    "typical_detailed_moods": ["euphoric", "romantic", "nostalgic"],
+    "acoustic_level": "low",
+    "related_genres": ["indie pop", "r&b"]
+  },
+  "indie pop": {
+    "description": "Indie pop blends pop sensibilities with lo-fi or alternative production aesthetics. Less polished than mainstream pop, more emotionally nuanced. Mid-range energy.",
+    "energy_range": [0.40, 0.75],
+    "typical_moods": ["happy", "sad", "moody", "chill"],
+    "typical_detailed_moods": ["nostalgic", "dreamy", "melancholic", "euphoric"],
+    "acoustic_level": "medium",
+    "related_genres": ["pop", "rock"]
+  },
+  "r&b": {
+    "description": "R&B (Rhythm and Blues) combines soulful vocals with groove-oriented production. Emotional, smooth, and often romantic. Mid-to-high energy with strong bass lines.",
+    "energy_range": [0.45, 0.85],
+    "typical_moods": ["romantic", "happy", "sad", "moody"],
+    "typical_detailed_moods": ["romantic", "euphoric", "melancholic"],
+    "acoustic_level": "low to medium",
+    "related_genres": ["hip-hop", "pop"]
+  },
+  "hip-hop": {
+    "description": "Hip-hop is built on drum machines, samples, and rap vocals. Ranges from laid-back boom-bap to aggressive trap. High energy and low acousticness are typical.",
+    "energy_range": [0.55, 0.95],
+    "typical_moods": ["energetic", "chill", "intense", "happy"],
+    "typical_detailed_moods": ["aggressive", "euphoric", "nostalgic"],
+    "acoustic_level": "very low",
+    "related_genres": ["r&b", "electronic"]
+  },
+  "rock": {
+    "description": "Rock is defined by electric guitars, bass, and drums. Ranges from melodic alternative rock to hard rock and punk. Generally high energy with strong rhythm.",
+    "energy_range": [0.60, 0.95],
+    "typical_moods": ["intense", "energetic", "sad", "moody"],
+    "typical_detailed_moods": ["aggressive", "melancholic", "dreamy"],
+    "acoustic_level": "low",
+    "related_genres": ["metal", "indie pop"]
+  },
+  "metal": {
+    "description": "Metal is characterized by heavily distorted guitars, fast drumming, and aggressive vocal delivery. Among the highest energy genres. Very low acousticness.",
+    "energy_range": [0.85, 1.00],
+    "typical_moods": ["angry", "intense"],
+    "typical_detailed_moods": ["aggressive", "melancholic"],
+    "acoustic_level": "very low",
+    "related_genres": ["rock", "electronic"]
+  },
+  "electronic": {
+    "description": "Electronic music is produced entirely with synthesizers, drum machines, and digital tools. Ranges from ambient techno to high-energy EDM. Very low acousticness.",
+    "energy_range": [0.45, 0.98],
+    "typical_moods": ["energetic", "intense", "chill", "moody", "happy"],
+    "typical_detailed_moods": ["euphoric", "aggressive", "dreamy"],
+    "acoustic_level": "very low",
+    "related_genres": ["synthwave", "hip-hop"]
+  },
+  "synthwave": {
+    "description": "Synthwave is a retro-futuristic genre inspired by 1980s film soundtracks and video games. Lush synthesizers, driving drums, and nostalgic aesthetics. Mid-to-high energy.",
+    "energy_range": [0.50, 0.92],
+    "typical_moods": ["moody", "energetic", "romantic", "chill"],
+    "typical_detailed_moods": ["nostalgic", "dreamy", "euphoric", "romantic"],
+    "acoustic_level": "very low",
+    "related_genres": ["electronic", "pop"]
+  },
+  "country": {
+    "description": "Country music centers on storytelling, acoustic guitars, and emotional themes of love, loss, and rural life. Mid-range energy with high acousticness.",
+    "energy_range": [0.30, 0.80],
+    "typical_moods": ["relaxed", "happy", "sad", "intense"],
+    "typical_detailed_moods": ["nostalgic", "melancholic", "euphoric"],
+    "acoustic_level": "high",
+    "related_genres": ["jazz", "indie pop"]
+  }
+}

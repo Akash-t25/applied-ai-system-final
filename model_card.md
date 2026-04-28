@@ -1,99 +1,108 @@
-# Model Card: Music Recommender Simulation
+# Model Card: VibeFinder — AI Music Recommender
 
 ---
 
 ## 1. Model Name
 
-**VibeFinder 1.0**
+**VibeFinder 2.0** (extended from VibeFinder 1.0 / Music Recommender Simulation)
 
 ---
 
 ## 2. Goal / Task
 
-VibeFinder takes a user's taste profile — their favorite genre, mood, target energy level, and whether they prefer acoustic music — and suggests the 5 best-matching songs from a catalog. It does not learn or adapt. It applies a fixed set of hand-designed scoring rules every time it runs.
+VibeFinder takes a user's natural language music request and returns the 5 best-matching songs from a 78-song catalog. The system combines a Groq LLM agent (llama-3.3-70b-versatile) for language understanding with a deterministic rule-based scoring engine for ranking. The agent handles intent classification, RAG-grounded preference extraction, and result quality checking. The engine handles all mathematical scoring.
 
 ---
 
 ## 3. Data Used
 
-- **Catalog size:** 20 songs
-- **Genres covered:** pop, lofi, rock, ambient, jazz, synthwave, indie pop, r&b, hip-hop, classical, country, electronic, metal
-- **Moods covered:** happy, chill, intense, relaxed, focused, moody, romantic, sad, energetic, angry
-- **Features per song:** id, title, artist, genre, mood, energy (0–1), tempo_bpm, valence, danceability, acousticness (0–1)
-- **Limits:** All data was manually written — no real audio was analyzed. Labels like "mood" and "genre" reflect one person's judgment. The catalog is tiny compared to real music apps, which have tens of millions of songs.
+**Song catalog (`data/songs.csv`):**
+- 78 songs across 13 genres: pop, lofi, rock, ambient, jazz, synthwave, indie pop, r&b, hip-hop, classical, country, electronic, metal
+- 3 release decades: 2000s, 2010s, 2020s
+- Features per song: id, title, artist, genre, mood, energy (0–1), tempo_bpm, valence, danceability, acousticness (0–1), popularity (0–100), release_decade, detailed_mood
+- All data is manually authored — no real audio was analyzed
+
+**Genre knowledge base (`data/genre_knowledge.json`):**
+- 13 genre documents used for RAG retrieval
+- Each document contains: description, energy range, typical moods, typical detailed moods, acoustic level, related genres
+- Used to ground the agent's energy estimates in documented facts rather than training intuition
+
+**Limits:** The catalog is fictional and small compared to real music apps. Genre and mood labels reflect one developer's judgment. The knowledge base documents are handcrafted, not derived from audio analysis.
 
 ---
 
 ## 4. Algorithm Summary
 
-Every song gets a score based on four rules:
+**Agent layer (Groq LLM):**
+1. CLASSIFY — determines whether the request is genre-driven, mood-driven, activity-driven, or era-driven
+2. RETRIEVE — fetches the relevant genre document from the knowledge base (RAG)
+3. PLAN — extracts structured preferences using retrieved context and four few-shot examples
+4. REFLECT — evaluates result quality and assigns a 0–100% confidence score; retries if quality is poor
 
-1. **Genre match** → +2.0 points. Worth the most because genre is the biggest dividing line between types of music. A rock fan and a jazz fan have almost no overlap.
-2. **Mood match** → +1.0 points. Important but more flexible — the same person might enjoy "happy" and "energetic" songs in the same genre.
-3. **Energy proximity** → between 0.0 and 1.0 points. Instead of rewarding just high or low energy, we calculate how *close* the song's energy is to what the user wants. A song exactly at the target gets 1.0. A song far away gets close to 0.
-4. **Acousticness alignment** → +0.5 points. If the song's acoustic feel (plugged-in vs. unplugged) matches the user's preference, it earns a bonus.
+**Scoring engine (rule-based):**
 
-The maximum any song can score is 4.5. All 20 songs are scored, sorted highest to lowest, and the top 5 are returned with an explanation of why each one ranked where it did.
+| Rule | Points | How it works |
+|---|---|---|
+| Genre match | +3.0 | Exact string match |
+| Mood match | +1.0 | Exact string match |
+| Energy proximity | 0.0–1.0 | `1.0 - abs(song_energy - target)` |
+| Acousticness alignment | +0.5 | Acoustic preference agrees with song |
+| Popularity bonus | 0.0–0.5 | `popularity / 100 × 0.5` |
+| Decade match | +0.5 | Release decade equals preferred decade |
+| Detailed mood match | +0.5 | Detailed mood tag matches preference |
+
+**Maximum score: 7.5.** Three scoring modes (genre-first, mood-first, energy-focused) shift the weights based on the agent's classification. A diversity penalty deducts points from repeat artists in the top results.
 
 ---
 
-## 5. Observed Behavior / Biases
+## 5. Observed Behavior and Biases
 
-**Genre dominates everything.** At +2.0, genre is worth nearly half the maximum score. When a user has conflicting preferences — for example, wanting high energy (0.90) but a sad mood in r&b — the system recommended a low-energy song (energy 0.44) as #1 because genre + mood together scored +3.0, which easily buried the energy mismatch. The user asked for something that felt intense; they got something that felt slow and melancholic.
+**Genre dominates.** At +3.0, genre is worth 40% of the maximum score. A song with the right genre but wrong everything else outscores a song with the wrong genre but perfect mood, energy, and acousticness. This is an intentional design decision but creates blind spots — adjacent genres like hip-hop and r&b are treated as completely different.
 
-**Binary matching has no middle ground.** A hip-hop fan gets zero genre points for r&b, even though those genres are closely related. The system treats every mismatch as equally wrong, whether the user wanted hip-hop and got r&b, or wanted hip-hop and got classical.
+**Binary matching has no middle ground.** A hip-hop fan gets zero genre points for r&b, even though the genres share tempo, production style, and culture. Every mismatch is equally penalized regardless of musical proximity.
 
-**Missing genres are silently ignored.** When a user wanted k-pop — a genre not in the catalog — the genre weight never fired at all. The system quietly fell back on mood and energy, returning indie pop and pop songs. There is no warning or indication that the genre wasn't found.
+**The RAG knowledge base reduced energy estimation errors.** Without it, the model estimated lofi energy at ~0.30; the actual dataset clusters at 0.35–0.43. With the knowledge base documenting the range as 0.20–0.50, estimates improved to ~0.38. However, the knowledge base is still handcrafted — it represents one person's understanding of genre characteristics, not measured audio data.
 
-**The same songs appear in too many lists.** High-energy songs like Storm Runner and Move the Crowd showed up across multiple unrelated profiles purely because they score well on energy proximity, not because they actually fit those profiles.
+**Outliers can survive the REFLECT step.** During testing, a country song appeared in lofi results because it matched the energy and acoustic constraints. The REFLECT step did not flag it because the other four results were correct — the agent evaluated the set holistically, not each song individually.
+
+**Dataset cultural bias.** Genres like K-pop, reggae, gospel, afrobeats, and bhangra are absent. Users whose musical identity centers on these genres receive poorer recommendations. This is not a technical limitation — it is a design decision that reflects whose taste was prioritized when the catalog was built.
 
 ---
 
-## 6. Evaluation Process
+## 6. Evaluation
 
-Five user profiles were tested:
+**Automated testing:**
+- 19 unit tests covering all scoring rules, edge cases, and diversity penalty behavior — 19/19 passing
+- 6 reliability checks for preset genre/energy constraints — 6/6 passing
+- 8-case evaluation harness with per-case engine confidence scores — 8/8 passing at 88% average confidence
 
-| Profile | Top Result | Score | Surprising? |
-|---|---|---|---|
-| Hip-hop / energetic / energy 0.85 | Concrete Jungle | 4.48 | No — perfect match |
-| Lofi / chill / energy 0.38 | Library Rain | 4.47 | No — perfect match |
-| Rock / intense / energy 0.90 | Storm Runner | 4.49 | No — perfect match |
-| R&B / sad / energy 0.90 (conflicting) | Heartstrings (energy 0.44) | 3.54 | Yes — high energy user got a slow song |
-| K-pop / happy / energy 0.75 (missing genre) | Rooftop Lights (indie pop) | 2.49 | Somewhat — reasonable fallback but wrong genre |
+**Few-shot specialization comparison:**
+- `tests/test_fewshot_comparison.py` runs 3 queries through the PLAN step with and without few-shot examples and compares genre accuracy, energy accuracy, scoring mode selection, and schema completeness
+- Demonstrates measurable improvement from few-shot prompting on all four criteria
 
-One experiment was also run: genre weight was halved (+2.0 → +1.0) and energy weight was doubled. The top result stayed the same for the rock profile, but the #2 and #3 results nearly caught up in score — the system became much less genre-loyal and more energy-loyal. This showed that small weight changes have a big effect on who gets recommended what.
+**Confidence scoring:**
+- The REFLECT step assigns a 0–100% confidence score to each result set
+- Scores below an internal threshold trigger a retry with adjusted preferences
 
 ---
 
 ## 7. Intended Use and Non-Intended Use
 
 **Intended use:**
-- Classroom exploration of how recommendation systems work
-- Learning how weighted scoring, sorting, and data flow connect together
-- Demonstrating the difference between a Scoring Rule (one song) and a Ranking Rule (all songs)
+- Demonstrating how a natural language interface can be layered on top of a rule-based system
+- Exploring RAG, few-shot prompting, and agentic loops in a low-stakes environment
+- Educational exploration of recommendation system design and AI reliability
 
 **Not intended for:**
-- Real users making actual music decisions — the catalog is too small and the labels are too rough
-- Any production environment — there is no error handling for missing data, unknown genres, or malformed input
-- Representing any real person's taste accurately — the user profile is a simplified snapshot, not a real listener model
-- Making decisions that affect people — this is a simulation, not a deployed system
+- Real users making actual music decisions — the catalog is too small and all titles/artists are fictional
+- Any production environment — there is no authentication, rate limiting beyond what Groq provides, or content moderation
+- Making decisions that affect people — this is a simulation
 
 ---
 
 ## 8. Ideas for Improvement
 
-1. **Add partial genre credit** — r&b should score something for a hip-hop user, not zero. You could group related genres and award partial points for nearby ones.
-2. **Support multiple preferred genres** — real listeners don't have one genre. Letting users say "I like hip-hop and r&b" would make results much more realistic.
-3. **Add a diversity rule** — prevent the same song from appearing across too many different profiles by penalizing repeated top results or forcing variety in the top 5.
-
----
-
-## 9. Personal Reflection
-
-**Biggest learning moment:** The edge case where a user who wanted energy 0.90 got a song at energy 0.44 as their #1 recommendation. It was a perfect reminder that the algorithm does exactly what you tell it to — it doesn't understand music, it just adds up numbers. Genre + mood together scored +3.0, which mathematically crushed the energy mismatch even though the result felt completely wrong. That gap between "mathematically correct" and "actually useful" is probably the most important thing I took away from this project.
-
-**How AI tools helped, and when I had to double-check:** AI was useful for explaining concepts quickly — things like why lambda works, what slice does, and how the proximity formula compares to a binary match. But the weights (2.0, 1.0, 0.5) were not generated by AI — those came from thinking through what actually matters in music. AI suggested structures and syntax; the design decisions had to come from understanding the problem.
-
-**What surprised me about simple algorithms:** The results for well-matched profiles (lofi/chill, rock/intense) felt surprisingly accurate — like something a real app would return. It didn't feel like basic math, even though that's all it is. That's what makes recommenders feel smart when they work: the output looks intelligent even when the underlying logic is just addition and sorting.
-
-**What I'd try next:** The most interesting extension would be replacing the static user profile with a listening history — track which songs the user plays or skips and update the weights automatically. That's essentially how Spotify works, and building even a basic version of that would make the system feel genuinely adaptive instead of frozen.
+1. **Partial genre credit** — r&b should score something for a hip-hop user. Genre embeddings or a similarity matrix would replace binary matching with gradient scoring.
+2. **User feedback loop** — track which songs users skip or replay and use that signal to update the weights automatically. This would make the system adaptive instead of static.
+3. **Larger and more diverse catalog** — adding real-world genres and a much larger dataset would meaningfully reduce cultural bias and make recommendations feel authentic.
+4. **Per-song REFLECT checking** — rather than evaluating the result set holistically, the agent should check each individual song against the request. This would catch outliers like the country song in lofi results.
