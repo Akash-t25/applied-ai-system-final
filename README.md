@@ -4,6 +4,18 @@
 
 ---
 
+## Final Presentation & Portfolio Artifact
+
+**Student Name:** Akash Tiloda
+
+**GitHub Repository:** [https://github.com/Akash-t25/applied-ai-system-final](https://github.com/Akash-t25/applied-ai-system-final)
+
+**Loom Video Walkthrough (Required):** [https://www.loom.com/share/4ac3a0d3d4774b1794cd01a3404efc09](https://www.loom.com/share/4ac3a0d3d4774b1794cd01a3404efc09)
+
+### Reflection: What this project says about me as an AI engineer
+
+This project shows that I build AI systems with both intelligence and engineering discipline. I combined an LLM agent for language understanding with a deterministic scoring engine for transparency, then added RAG grounding, reflection/retry checks, and evaluation tests so the system is reliable and explainable instead of a black-box demo. As an AI engineer, I care about building systems that are practical, auditable, and user-friendly end-to-end.
+
 ## What This Project Is
 
 VibeFinder is a two-part project built across two phases of development.
