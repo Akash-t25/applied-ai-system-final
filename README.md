@@ -10,7 +10,7 @@
 
 **GitHub Repository:** [https://github.com/Akash-t25/applied-ai-system-final](https://github.com/Akash-t25/applied-ai-system-final)
 
-**Loom Video Walkthrough (Required):** [https://www.loom.com/share/4ac3a0d3d4774b1794cd01a3404efc09](https://www.loom.com/share/4ac3a0d3d4774b1794cd01a3404efc09)
+**Loom Video Walkthrough:** [https://www.loom.com/share/4ac3a0d3d4774b1794cd01a3404efc09](https://www.loom.com/share/4ac3a0d3d4774b1794cd01a3404efc09)
 
 ### Reflection: What this project says about me as an AI engineer
 
